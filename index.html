@@ -66,7 +66,7 @@ select{font:16px "Noto Sans KR";padding:10px 12px;border-radius:10px;border:1px 
 .opt.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent)}
 .opt.no{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,transparent)}
 .opt:disabled{cursor:default;color:inherit}
-.exp{margin-top:14px;border-radius:12px;padding:14px 16px;background:color-mix(in srgb,var(--sky) 10%,transparent);white-space:pre-line}
+.exp{white-space:pre-line;margin-top:14px;border-radius:12px;padding:14px 16px;background:color-mix(in srgb,var(--sky) 10%,transparent);white-space:pre-line}
 .exp b{display:block;margin-bottom:4px}
 .navrow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap}
 .prog{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:14px}
@@ -189,9 +189,9 @@ function paneSetup(k,pane,presetUnit){
   const items=BANK[k].items;
   const pref=store.get('pref',{lv:[2,3,4],n:0});
   let lv=new Set((pref.lv||[]).filter(x=>[2,3,4].includes(x))),n=[0,10,20,50].includes(pref.n)?pref.n:0,mode='all',unit=presetUnit||'';
-  const TYPES=[['all','전체'],['fig','그래프·도형'],['case','사례형']];const hasType=items.some(q=>q.s==='사례형'||q.f);let typ='all';
+  const TYPES=[['all','전체'],['fig','그래프·도형'],['case','사례형'],['fusion','융합형']];const hasType=items.some(q=>q.s==='사례형'||q.f);let typ='all';
   if(!lv.size)lv=new Set([2,3,4]);
-  const filter=()=>items.filter(q=>lv.has(q.l)&&(typ==='all'||(typ==='fig'?!!q.f:q.s==='사례형'))&&(!unit||(unit.startsWith('u:')?q.u===unit.slice(2):q.b===unit.slice(2)))&&(mode==='all'||(mode==='new'&&!stats[q.id])||(mode==='wrong'&&stats[q.id]&&!stats[q.id].last)));
+  const filter=()=>items.filter(q=>lv.has(q.l)&&(typ==='all'||(typ==='fig'?!!q.f:typ==='fusion'?q.s==='융합형':q.s==='사례형'))&&(!unit||(unit.startsWith('u:')?q.u===unit.slice(2):q.b===unit.slice(2)))&&(mode==='all'||(mode==='new'&&!stats[q.id])||(mode==='wrong'&&stats[q.id]&&!stats[q.id].last)));
   const draw=()=>{
     const pool=filter();
     pane.innerHTML=`<div class="card">

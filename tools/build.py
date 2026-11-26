@@ -48,8 +48,21 @@ for gi,st in enumerate(SETS):
 sci_stmt=stmt_engine.make(bank_sci.SCI,50,1,lambda l:"수능형" if l==4 else "모의고사형")
 import gen_math2,gen_think2,gen_eng2
 exec(open('eng5.py').read(),ns);exec(open('chi3.py').read(),ns)
-import gen_fig
-ns['M']=ns['M']+ns['M2']+gen_math.OUT+gen_math2.OUT+gen_fig.OUT
+import gen_fig, fusion
+def _val(o):
+    import math as _m
+    t=o.replace('−','-').replace('√','*_m.sqrt').replace('+*','+').replace('-*','-')
+    t=__import__('re').sub(r'(\d)\*_m',r'\1*_m',t)
+    t=__import__('re').sub(r'^\*_m','_m',t)
+    t=__import__('re').sub(r'_m\.sqrt(\d+)',r'_m.sqrt(\1)',t)
+    try: return float(eval(t,{'_m':_m}))
+    except Exception: return None
+def _order(opts):
+    v=[_val(o) for o in opts]
+    if all(x is not None for x in v): return [o for _,o in sorted(zip(v,opts))]
+    import random as _r; o=opts[:]; _r.Random(len(o[0])+len(o[1])).shuffle(o); return o
+FUS=[dict(unit='융합 심화',lvl=it['lvl'],src='융합형',q=it['q'],opts=_order(it['opts']),ans=it['opts'][0],exp='[결합 단원: '+' · '.join(it['tags'])+']\n'+it['exp'],fig=it['fig']) for it in fusion.FUS]
+ns['M']=ns['M']+ns['M2']+gen_math.OUT+gen_math2.OUT+gen_fig.OUT+FUS
 ns['E']=set_items+ns['E']+conv(ns['E2raw'],esrc,True)+conv(ns['E3raw'],esrc,True)+conv(ns['E4raw'],esrc,True)+gen_eng.OUT+gen_eng2.OUT+conv(ns['E5raw'],esrc,True)
 ns['C']=ns['C']+conv(ns['C2raw'],csrc,True)+gen_chi.OUT+conv(ns['C3raw'],csrc,True)
 ns['S']=ns['S']+gen_sci.OUT+conv(ns['S2raw'],gsrc,False)+sci_stmt
@@ -97,7 +110,7 @@ for key,name,var in subj:
 MATH_ORDER=[("다항식","공통수학1 · 1학기"),("복소수","공통수학1 · 1학기"),("이차방정식","공통수학1 · 1학기"),("이차함수","공통수학1 · 1학기"),
  ("삼차방정식","공통수학1 · 1학기"),("연립방정식","공통수학1 · 1학기"),("부등식","공통수학1 · 1학기"),("경우의 수","공통수학1 · 1학기"),("행렬","공통수학1 · 1학기"),
  ("도형의 방정식","공통수학2 · 2학기"),("집합","공통수학2 · 2학기"),("명제","공통수학2 · 2학기"),("절대부등식","공통수학2 · 2학기"),
- ("함수","공통수학2 · 2학기"),("유리함수","공통수학2 · 2학기"),("무리함수","공통수학2 · 2학기")]
+ ("함수","공통수학2 · 2학기"),("유리함수","공통수학2 · 2학기"),("무리함수","공통수학2 · 2학기"),("융합 심화","공통수학1·2 융합")]
 MB=dict(MATH_ORDER)
 for it in out['math']['items']:
     assert it['u'] in MB, it['u']
