@@ -1,4 +1,4 @@
-# Cultural Bridger - Jinwoo
+# Cultural Bridger - Justin
 
 고1(2022 개정 교육과정) 고난도 문제은행 학습 앱입니다. 수학·영어·중국어·과학·사회·사고력 6과목, 6,353문항(전 단원 50문항 이상).
 
