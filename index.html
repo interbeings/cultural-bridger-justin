@@ -103,6 +103,7 @@ details.wn summary{cursor:pointer;font-weight:500;list-style-position:outside}
 details.wn .ans{margin:8px 0;font-size:15px}
 details.wn .ans .x{color:var(--bad)} details.wn .ans .o{color:var(--ok)}
 .small{font-size:13px;color:var(--mute)}
+.fig{margin:4px 0 14px;color:var(--ink);overflow-x:auto}.fig svg{max-width:100%;height:auto;display:block;margin:0 auto}
 .empty{padding:22px;text-align:center;color:var(--mute)}
 </style>
 </head>
@@ -188,13 +189,15 @@ function paneSetup(k,pane,presetUnit){
   const items=BANK[k].items;
   const pref=store.get('pref',{lv:[2,3,4],n:0});
   let lv=new Set((pref.lv||[]).filter(x=>[2,3,4].includes(x))),n=[0,10,20,50].includes(pref.n)?pref.n:0,mode='all',unit=presetUnit||'';
+  const TYPES=[['all','전체'],['fig','그래프·도형'],['case','사례형']];const hasType=items.some(q=>q.s==='사례형'||q.f);let typ='all';
   if(!lv.size)lv=new Set([2,3,4]);
-  const filter=()=>items.filter(q=>lv.has(q.l)&&(!unit||(unit.startsWith('u:')?q.u===unit.slice(2):q.b===unit.slice(2)))&&(mode==='all'||(mode==='new'&&!stats[q.id])||(mode==='wrong'&&stats[q.id]&&!stats[q.id].last)));
+  const filter=()=>items.filter(q=>lv.has(q.l)&&(typ==='all'||(typ==='fig'?!!q.f:q.s==='사례형'))&&(!unit||(unit.startsWith('u:')?q.u===unit.slice(2):q.b===unit.slice(2)))&&(mode==='all'||(mode==='new'&&!stats[q.id])||(mode==='wrong'&&stats[q.id]&&!stats[q.id].last)));
   const draw=()=>{
     const pool=filter();
     pane.innerHTML=`<div class="card">
     <label class="f" for="unitSel">단원</label><select id="unitSel">${unitOptions(k,unit)}</select>
     <label class="f">난이도</label><div class="row">${[2,3,4].map(l=>`<button class="chip" type="button" data-lv="${l}" aria-pressed="${lv.has(l)}">${LV[l]}</button>`).join('')}</div>
+    ${hasType?`<label class="f">문제 유형</label><div class="row">${TYPES.map(([v,t])=>`<button class="chip" type="button" data-typ="${v}" aria-pressed="${typ===v}">${t}</button>`).join('')}</div>`:''}
     <label class="f">출제 범위</label><div class="row">${[['all','전체'],['new','안 푼 문제'],['wrong','오답만']].map(([v,t])=>`<button class="chip" type="button" data-mode="${v}" aria-pressed="${mode===v}">${t}</button>`).join('')}</div>
     <label class="f">문항 수</label><div class="row">${[[0,'계속 풀기'],[10,'10문제'],[20,'20문제'],[50,'50문제']].map(([v,t])=>`<button class="chip" type="button" data-n="${v}" aria-pressed="${n===v}">${t}</button>`).join('')}</div>
     <p class="small">'계속 풀기'는 그만하기를 누를 때까지 새 문제가 끝없이 이어집니다.</p>
@@ -202,9 +205,10 @@ function paneSetup(k,pane,presetUnit){
     <div class="navrow"><span class="small">조건에 맞는 문항 ${pool.length}개</span>${pool.length?'<button class="go" id="go" type="button">시작</button>':'<button class="go" id="resetCond" type="button">조건 초기화</button>'}</div></div>`;
     pane.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{const l=+b.dataset.lv;lv.has(l)&&lv.size>1?lv.delete(l):lv.add(l);draw()});
     pane.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;draw()});
+    pane.querySelectorAll('[data-typ]').forEach(b=>b.onclick=()=>{typ=b.dataset.typ;draw()});
     pane.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{n=+b.dataset.n;draw()});
     pane.querySelector('#unitSel').onchange=e=>{unit=e.target.value;draw()};
-    const rc=pane.querySelector('#resetCond');if(rc)rc.onclick=()=>{lv=new Set([2,3,4]);mode='all';unit='';draw()};
+    const rc=pane.querySelector('#resetCond');if(rc)rc.onclick=()=>{lv=new Set([2,3,4]);mode='all';unit='';typ='all';draw()};
     const gb=pane.querySelector('#go');if(gb)gb.onclick=()=>{store.set('pref',{lv:[...lv],n});start(k,filter,n,BANK[k].name+(unit?' · '+unit.slice(2):''))};
   };
   draw();
@@ -226,7 +230,7 @@ function paneWrong(k,pane){
   pane.innerHTML=`<div class="navrow" style="margin:0 0 12px"><span class="small">틀린 문제 ${list.length}개 · 다시 풀어 맞히면 자동으로 빠져요</span><button class="go" id="reWrong" type="button">오답 다시 풀기</button></div>
   ${BANK[k].units.filter(u=>byUnit[u]).map(u=>`<div class="ugroup">${esc(u)} (${byUnit[u].length})</div>`+byUnit[u].map(q=>{const s=stats[q.id];
     return `<details class="wn"><summary>${esc(q.q.split('\n')[0].slice(0,80))}${q.p?' <span class="small">· 지문 '+esc(q.p.slice(0,40))+'…</span>':''}</summary>
-    ${q.q.includes('\n')?`<p class="q" style="font-size:15px">${esc(q.q)}</p>`:''}${q.p?`<div class="passage ${k==='english'?'en':k==='chinese'?'zh':''}">${esc(q.p)}</div>`:''}
+    ${q.q.includes('\n')||q.f?`<p class="q" style="font-size:15px">${esc(q.q)}</p>`:''}${q.f?`<div class="fig">${q.f}</div>`:''}${q.p?`<div class="passage ${k==='english'?'en':k==='chinese'?'zh':''}">${esc(q.p)}</div>`:''}
     <div class="ans"><div class="x">내 답: ${esc(s.pick||'—')}</div><div class="o">정답: ${esc(q.o[q.a])}</div></div><div class="exp">${esc(q.x)}</div>
     <div class="navrow"><span class="small">틀린 횟수 ${s.w} · 맞힌 횟수 ${s.c}</span><button class="ghost" type="button" data-del="${q.id}">오답노트에서 빼기</button></div></details>`}).join('')).join('')}`;
   pane.querySelector('#reWrong').onclick=()=>start(k,()=>wrongList(k),0,BANK[k].name+' 오답노트');
@@ -255,7 +259,7 @@ function ask(){
   const lang=st.k==='english'?'en':st.k==='chinese'?'zh':'';
   const prog=st.limit?`<div class="prog"><i style="width:${st.done/st.limit*100}%"></i></div>`:'';
   app.innerHTML=`${prog}<div class="card"><div class="meta"><span class="tag">${esc(st.title)} · ${st.done+1}번째${st.limit?' / '+st.limit:''}</span><span class="tag l${q.l}">${LV[q.l]}</span>${q.g?`<span class="tag">세트 문항 ${q.gi}/${q.gn}</span>`:''}${q.b?`<span class="tag">${esc(q.b)}</span>`:''}<span class="tag">${esc(q.u)}</span><span class="tag">${esc(q.s)}</span></div>
-  <p class="q">${esc(q.q)}</p>${q.p?`<div class="passage ${lang}">${esc(q.p)}</div>`:''}
+  <p class="q">${esc(q.q)}</p>${q.f?`<div class="fig">${q.f}</div>`:''}${q.p?`<div class="passage ${lang}">${esc(q.p)}</div>`:''}
   <div class="opts">${order.map((oi,j)=>`<button class="opt ${lang==='zh'?'zh':''}" type="button" data-oi="${oi}"><span class="n">${j+1}</span><span>${esc(q.o[oi])}</span></button>`).join('')}</div>
   <div id="after"></div><div class="navrow"><span class="small">${st.limit?'':'계속 풀기 모드 · '}이번 학습 ${fmtTime(st.sec)}</span><button class="ghost" id="quit0" type="button">그만하기</button></div></div>`;
   app.querySelectorAll('.opt').forEach(b=>b.onclick=()=>answer(q,+b.dataset.oi));

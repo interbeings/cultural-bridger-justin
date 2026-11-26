@@ -48,7 +48,8 @@ for gi,st in enumerate(SETS):
 sci_stmt=stmt_engine.make(bank_sci.SCI,50,1,lambda l:"수능형" if l==4 else "모의고사형")
 import gen_math2,gen_think2,gen_eng2
 exec(open('eng5.py').read(),ns);exec(open('chi3.py').read(),ns)
-ns['M']=ns['M']+ns['M2']+gen_math.OUT+gen_math2.OUT
+import gen_fig
+ns['M']=ns['M']+ns['M2']+gen_math.OUT+gen_math2.OUT+gen_fig.OUT
 ns['E']=set_items+ns['E']+conv(ns['E2raw'],esrc,True)+conv(ns['E3raw'],esrc,True)+conv(ns['E4raw'],esrc,True)+gen_eng.OUT+gen_eng2.OUT+conv(ns['E5raw'],esrc,True)
 ns['C']=ns['C']+conv(ns['C2raw'],csrc,True)+gen_chi.OUT+conv(ns['C3raw'],csrc,True)
 ns['S']=ns['S']+gen_sci.OUT+conv(ns['S2raw'],gsrc,False)+sci_stmt
@@ -82,7 +83,7 @@ def isnum(x): return any(ch.isdigit() or ch in '√π' for ch in x) and len(x)<1
 for key,name,var in subj:
     items=[];seenq={}
     for i,e in enumerate(ns[var]):
-        kq=e['q']+'|'+e.get('passage','')+'|'+'/'.join(sorted(e['opts']))
+        kq=e['q']+'|'+e.get('passage','')+'|'+'/'.join(sorted(e['opts']))+e.get('fig','')
         if kq in seenq and seenq[kq]==e['ans']: continue
         seenq.setdefault(kq,e['ans'])
         e=dict(e);e['unit']=RENAME.get(key,{}).get(e['unit'],e['unit'])
@@ -90,7 +91,7 @@ for key,name,var in subj:
         o=list(o)
         assert e['ans'] in o and len(o)==5 and len(set(o))==5,(key,i,e['q'][:30])
         is_ord=all(isnum(x) for x in o) or o[0] in('①','ㄱ','ㄱ, ㄴ') or o[0].startswith('(')
-        items.append(dict(id=f"{var}{i+1:02d}",u=e['unit'],l=e['lvl'],s=e['src'],q=e['q'],p=e.get('passage',''),o=o,a=o.index(e['ans']),x=e['exp'],sh=0 if is_ord else 1,**({'g':e['g'],'gi':e['gi'],'gn':e['gn']} if 'g' in e else {})))
+        items.append(dict(id=f"{var}{i+1:02d}",u=e['unit'],l=e['lvl'],s=e['src'],q=e['q'],p=e.get('passage',''),o=o,a=o.index(e['ans']),x=e['exp'],sh=0 if is_ord else 1,**({'g':e['g'],'gi':e['gi'],'gn':e['gn']} if 'g' in e else {}),**({'f':e['fig']} if e.get('fig') else {})))
     out[key]=dict(name=name,items=items)
     print(key,len(items),dict(Counter(it['l'] for it in items)),'fixed-pos answers',Counter(it['a'] for it in items if not it['sh']))
 MATH_ORDER=[("다항식","공통수학1 · 1학기"),("복소수","공통수학1 · 1학기"),("이차방정식","공통수학1 · 1학기"),("이차함수","공통수학1 · 1학기"),
