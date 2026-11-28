@@ -60,6 +60,7 @@ select{font:16px "Noto Sans KR";padding:10px 12px;border-radius:10px;border:1px 
 .passage.en{font-family:Georgia,"Times New Roman",serif;font-size:16.5px}
 .passage.zh,.opt.zh{font-family:"Noto Sans SC","Noto Sans KR",sans-serif}
 .opts{display:grid;gap:8px}
+.sa{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sa input{font:700 20px "Chakra Petch",sans-serif;width:140px;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;background:transparent;color:inherit;text-align:center}.sa input.ok{border-color:var(--ok);color:var(--ok)}.sa input.no{border-color:var(--bad);color:var(--bad)}.sa .hint{font-size:13px;color:var(--mute)}
 .opt{display:flex;gap:10px;align-items:flex-start;text-align:left;width:100%;background:transparent;border:1.5px solid var(--line);border-radius:12px;padding:11px 14px;min-height:48px}
 .opt .n{flex:none;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--mute);display:grid;place-items:center;font:700 13px "Chakra Petch"}
 .opt:hover:not(:disabled){border-color:var(--ball)}
@@ -103,7 +104,7 @@ details.wn summary{cursor:pointer;font-weight:500;list-style-position:outside}
 details.wn .ans{margin:8px 0;font-size:15px}
 details.wn .ans .x{color:var(--bad)} details.wn .ans .o{color:var(--ok)}
 .small{font-size:13px;color:var(--mute)}
-.fig{margin:4px 0 14px;color:var(--ink);overflow-x:auto}.fig svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.fig{margin:4px 0 14px;color:var(--ink);overflow-x:auto}.fig table.dt{width:auto;min-width:60%;margin:0 auto;font-size:14.5px}.fig table.dt th,.fig table.dt td{border:1px solid var(--line);padding:6px 8px;text-align:center}.fig table.dt td{white-space:nowrap}.fig table.dt th{font-size:13px;line-height:1.3}.fig table.dt th{background:color-mix(in srgb,var(--ink) 6%,transparent)}.fig table.dt caption{caption-side:bottom;font-size:12.5px;color:var(--mute);padding-top:6px}.fig svg{max-width:100%;height:auto;display:block;margin:0 auto}
 .empty{padding:22px;text-align:center;color:var(--mute)}
 </style>
 </head>
@@ -162,7 +163,7 @@ function home(){
   <details style="margin-top:14px"><summary class="small">날짜별 과목 상세 보기</summary>
   <div class="scroll"><table><thead><tr><th>날짜</th>${keys.map(k=>`<th class="r">${esc(BANK[k].name)}</th>`).join('')}</tr></thead><tbody>${days.slice().reverse().map(d=>{const dd=daily[d]||{};return `<tr><td>${d.slice(5).replace('-','/')}</td>${keys.map(k=>{const v=dd[k];return `<td class="r">${v?`${v.n}문제<br><span class="small">${mins(v.sec)}분</span>`:'—'}</td>`}).join('')}</tr>`}).join('')}</tbody></table></div></details></div>
   <div class="navrow" style="margin-top:18px"><button class="ghost" id="reset" type="button">기록 초기화</button></div>
-  <p class="note">총 ${keys.reduce((a,k)=>a+BANK[k].items.length,0)}문항 · 수능·모의고사·EBS·HSK·SAT 유형과 난이도를 본뜬 자체 제작 변형 문항입니다. 수학·사고력·과학 계산형에는 같은 유형에 숫자를 바꾼 유사문항이, 과학·사회 보기형과 어휘 문항에는 진술·어휘 은행을 조합해 만든 문항이 포함되어 있습니다. 학습 시간은 문제를 보고 답할 때까지의 시간(한 문제 최대 5분)으로 계산하며, 기록은 이 기기의 브라우저에만 저장됩니다.</p>`;
+  <p class="note">총 ${keys.reduce((a,k)=>a+BANK[k].items.length,0)}문항 · 수학·영어·과학·사회는 고1 3·6·9월 전국연합학력평가(학평)의 문항 형식·배점·유형 구성을 본뜬 자체 제작 문항(수학은 5지선다 70%·단답형 30%), 중국어·사고력은 HSK·PSAT 등 유형을 본뜬 자체 제작 변형 문항입니다. 수학·사고력·과학 계산형에는 같은 유형에 숫자를 바꾼 유사문항이, 과학·사회 보기형과 어휘 문항에는 진술·어휘 은행을 조합해 만든 문항이 포함되어 있습니다. 학습 시간은 문제를 보고 답할 때까지의 시간(한 문제 최대 5분)으로 계산하며, 기록은 이 기기의 브라우저에만 저장됩니다.</p>`;
   app.querySelectorAll('.subj').forEach(b=>b.onclick=()=>subject(b.dataset.k,'play'));
   const r=document.getElementById('reset');let armed=false;
   r.onclick=()=>{if(!armed){armed=true;r.textContent='한 번 더 누르면 모든 기록 삭제';return}stats={};daily={};store.set('stats',stats);store.set('daily',daily);home()};
@@ -189,9 +190,9 @@ function paneSetup(k,pane,presetUnit){
   const items=BANK[k].items;
   const pref=store.get('pref',{lv:[2,3,4],n:0});
   let lv=new Set((pref.lv||[]).filter(x=>[2,3,4].includes(x))),n=[0,10,20,50].includes(pref.n)?pref.n:0,mode='all',unit=presetUnit||'';
-  const TYPES=[['all','전체'],['fig','그래프·도형'],['case','사례형'],['fusion','융합형']];const hasType=items.some(q=>q.s==='사례형'||q.f);let typ='all';
+  const TYPES=[['all','전체'],['fig','그래프·도형'],['case','사례형'],['fusion','융합형'],['sa','단답형'],['mc','5지선다']].filter(([v])=>v==='all'||(v==='sa'||v==='mc'?items.some(q=>q.sa):v==='fig'?items.some(q=>q.f):v==='case'?items.some(q=>q.s==='사례형'):items.some(q=>q.s==='융합형')));const hasType=TYPES.length>1;let typ='all';
   if(!lv.size)lv=new Set([2,3,4]);
-  const filter=()=>items.filter(q=>lv.has(q.l)&&(typ==='all'||(typ==='fig'?!!q.f:typ==='fusion'?q.s==='융합형':q.s==='사례형'))&&(!unit||(unit.startsWith('u:')?q.u===unit.slice(2):q.b===unit.slice(2)))&&(mode==='all'||(mode==='new'&&!stats[q.id])||(mode==='wrong'&&stats[q.id]&&!stats[q.id].last)));
+  const filter=()=>items.filter(q=>lv.has(q.l)&&(typ==='all'||(typ==='fig'?!!q.f:typ==='fusion'?q.s==='융합형':typ==='sa'?!!q.sa:typ==='mc'?!q.sa:q.s==='사례형'))&&(!unit||(unit.startsWith('u:')?q.u===unit.slice(2):q.b===unit.slice(2)))&&(mode==='all'||(mode==='new'&&!stats[q.id])||(mode==='wrong'&&stats[q.id]&&!stats[q.id].last)));
   const draw=()=>{
     const pool=filter();
     pane.innerHTML=`<div class="card">
@@ -260,28 +261,31 @@ function ask(){
   const prog=st.limit?`<div class="prog"><i style="width:${st.done/st.limit*100}%"></i></div>`:'';
   app.innerHTML=`${prog}<div class="card"><div class="meta"><span class="tag">${esc(st.title)} · ${st.done+1}번째${st.limit?' / '+st.limit:''}</span><span class="tag l${q.l}">${LV[q.l]}</span>${q.g?`<span class="tag">세트 문항 ${q.gi}/${q.gn}</span>`:''}${q.b?`<span class="tag">${esc(q.b)}</span>`:''}<span class="tag">${esc(q.u)}</span><span class="tag">${esc(q.s)}</span></div>
   <p class="q">${esc(q.q)}</p>${q.f?`<div class="fig">${q.f}</div>`:''}${q.p?`<div class="passage ${lang}">${esc(q.p)}</div>`:''}
-  <div class="opts">${order.map((oi,j)=>`<button class="opt ${lang==='zh'?'zh':''}" type="button" data-oi="${oi}"><span class="n">${j+1}</span><span>${esc(q.o[oi])}</span></button>`).join('')}</div>
+  ${q.sa?`<form class="sa" id="saF"><input id="saIn" inputmode="numeric" autocomplete="off" aria-label="정답 입력" placeholder="정답"><button class="go" type="submit">확인</button><span class="hint">단답형 · 자연수로 답하세요</span></form>`:`<div class="opts">${order.map((oi,j)=>`<button class="opt ${lang==='zh'?'zh':''}" type="button" data-oi="${oi}"><span class="n">${j+1}</span><span>${esc(q.o[oi])}</span></button>`).join('')}</div>`}
   <div id="after"></div><div class="navrow"><span class="small">${st.limit?'':'계속 풀기 모드 · '}이번 학습 ${fmtTime(st.sec)}</span><button class="ghost" id="quit0" type="button">그만하기</button></div></div>`;
   app.querySelectorAll('.opt').forEach(b=>b.onclick=()=>answer(q,+b.dataset.oi));
+  if(q.sa){const f=document.getElementById('saF'),inp=document.getElementById('saIn');f.onsubmit=e=>{e.preventDefault();const v=inp.value.trim().replace(/[^0-9−-]/g,'').replace('-','−');if(!v){inp.focus();return}const oi=q.o.indexOf(v);answer(q,oi>=0?oi:-1,v)}}
   document.getElementById('quit0').onclick=result;
   window.scrollTo({top:0});
 }
-function answer(q,oi){
+function answer(q,oi,typed){
   const ok=oi===q.a,sec=Math.min(300,Math.round((Date.now()-st.t0)/1000));
+  if(q.sa){const inp=document.getElementById('saIn');inp.disabled=true;inp.classList.add(ok?'ok':'no');const sb=document.querySelector('#saF button');if(sb)sb.disabled=true}
   app.querySelectorAll('.opt').forEach(b=>{b.disabled=true;const v=+b.dataset.oi;if(v===q.a)b.classList.add('ok');else if(v===oi)b.classList.add('no')});
   st.done++;st.sec+=sec;st.recent.add(q.id);
   if(ok){st.score++;st.streak++;st.best=Math.max(st.best,st.streak)}else st.streak=0;
-  const s=stats[q.id]||{c:0,w:0};ok?s.c++:s.w++;s.last=ok?1:0;if(!ok)s.pick=q.o[oi];stats[q.id]=s;store.set('stats',stats);
+  const s=stats[q.id]||{c:0,w:0};ok?s.c++:s.w++;s.last=ok?1:0;if(!ok)s.pick=q.sa?typed:q.o[oi];stats[q.id]=s;store.set('stats',stats);
   record(st.k,ok,sec);st.log.push({q,ok});
   setBoard(st.score,'맞힌 문제',st.done,'푼 문제',st.streak,'연속 정답');
   if(ok){const e=document.getElementById('bScore');e.classList.remove('flash');void e.offsetWidth;e.classList.add('flash')}
   const end=st.limit&&st.done>=st.limit&&!(st.queue[0]&&q.g&&st.queue[0].g===q.g);
   document.getElementById('quit0').parentElement.remove();
-  document.getElementById('after').innerHTML=`<div class="exp"><b style="color:var(${ok?'--ok':'--bad'})">${ok?'득점! 정답입니다.':'아쉽네요. 정답은 초록색 선지이고, 이 문제는 오답노트에 저장됐어요.'}</b>${esc(q.x)}</div>
+  document.getElementById('after').innerHTML=`<div class="exp"><b style="color:var(${ok?'--ok':'--bad'})">${ok?'득점! 정답입니다.':q.sa?'아쉽네요. 정답은 '+esc(q.o[q.a])+'이고, 이 문제는 오답노트에 저장됐어요.':'아쉽네요. 정답은 초록색 선지이고, 이 문제는 오답노트에 저장됐어요.'}</b>${esc(q.x)}</div>
   <div class="navrow"><button class="ghost" id="quit" type="button">그만하기</button><button class="go" id="next" type="button">${end?'결과 보기':'다음 문제'}</button></div>`;
   document.getElementById('next').onclick=()=>end?result():ask();
   document.getElementById('quit').onclick=result;
   document.getElementById('next').focus({preventScroll:true});
+  if(q.sa)document.getElementById('after').scrollIntoView({block:'nearest'});
 }
 function result(){
   const done=st.log.length,ok=st.log.filter(r=>r.ok).length,k=st.k;
